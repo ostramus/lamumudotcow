@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gelişmiş İnek Çiftliği Simülasyonu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .game-container {
+            width: 1200px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            background: linear-gradient(to right, #27ae60, #2ecc71);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+        }
+        
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active {
+            background: white;
+            color: #27ae60;
+        }
+        
+        .game-content {
+            display: flex;
+            padding: 25px;
+            gap: 25px;
+        }
+        
+        .farm-area {
+            flex: 2;
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+            aspect-ratio: 5/4;
+        }
+        
+        .farm-cell {
+            background: #e8f5e9;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .farm-cell.has-cow {
+            background: #c8e6c9;
+        }
+        
+        .farm-cell.has-cow::after {
+            content: '🐄';
+            font-size: 30px;
+            animation: cowEat 3s infinite;
+        }
+        
+        @keyframes cowEat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-5px) scale(1.05); }
+        }
+        
+        .cow-info {
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            font-size: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 10px;
+            display: flex;
+            gap: 3px;
+        }
+        
+        .cow-stat {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .side-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .market, .upgrades, .actions {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            color: #27ae60;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .market-items, .upgrade-items {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .market-item, .upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .market-item:hover, .upgrade-item:hover {
+            background: #f1f8e9;
+        }
+        
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .item-icon {
+            font-size: 24px;
+        }
+        
+        .item-details {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .item-price {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .buy-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .buy-btn:hover {
+            background: #219653;
+        }
+        
+        .buy-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.6);
+        }
+        
+        .btn-primary:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-title {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #27ae60;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        .events-log {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 25px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .event {
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .event.info {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+        }
+        
+        .event.success {
+            background: #eafaf1;
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .event.warning {
+            background: #fef9e7;
+            border-left: 4px solid #f1c40f;
+        }
+        
+        .event.danger {
+            background: #fdedec;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .message-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .message h2 {
+            color: #27ae60;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .message p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .start-btn {
+            background: linear-gradient(to right, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.6);
+        }
+        
+        .time-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .time-btn {
+            flex: 1;
+            padding: 8px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .time-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        .time-btn:hover:not(.active) {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="logo">
+                <span>🐄</span>
+                <span id="game-title">Gelişmiş İnek Çiftliği</span>
+            </div>
+            <div class="stats">
+                <div class="stat">💰 <span id="money">1000</span> <span class="currency">Altın</span></div>
+                <div class="stat">🥛 <span id="milk">0</span> <span class="unit">Litre</span></div>
+                <div class="stat">🌾 <span id="food">100</span> <span class="unit">Kg</span></div>
+                <div class="stat">🐄 <span id="cows">0</span>/<span id="maxCows">10</span> <span class="cow-unit">İnek</span></div>
+            </div>
+            <div class="language-selector">
+                <button class="lang-btn active" id="lang-tr">TR</button>
+                <button class="lang-btn" id="lang-en">EN</button>
+            </div>
+        </div>
+        
+        <div class="game-content">
+            <div class="farm-area" id="farmArea">
+                <!-- Çiftlik hücreleri JavaScript ile eklenecek -->
+            </div>
+            
+            <div class="side-panel">
+                <div class="market">
+                    <h3 class="section-title" id="market-title">Market</h3>
+                    <div class="market-items">
+                        <div class="market-item">
+                            <div class="item-info">
+                                <div class="item-icon">🐄</div>
+                                <div class="item-details">
+                                    <div class="item-name" id="cow-item">İnek</div>
+                                    <div class="item-price">100 <span class="currency">Altın</span></div>
+                                </div>
+                            </div>
+                            <button class="buy-btn" id="buyCowBtn">Satın Al</button>
+                        </div>
+                        
+                        <div class="market-item">
+                            <div class="item-info">
+                                <div class="item-icon">🌾</div>
+                                <div class="item-details">
+                                    <div class="item-name" id="food-item">Yem Paketi</div>
+                                    <div class="item-price">30 <span class="currency">Altın</span></div>
+                                </div>
+                            </div>
+                            <button class="buy-btn" id="buyFoodBtn">Satın Al</button>
+                        </div>
+                        
+                        <div class="market-item">
+                            <div class="item-info">
+                                <div class="item-icon">🏠</div>
+                                <div class="item-details">
+                                    <div class="item-name" id="barn-item">Ahır Yükseltme</div>
+                                    <div class="item-price">200 <span class="currency">Altın</span></div>
+                                </div>
+                            </div>
+                            <button class="buy-btn" id="buyBarnBtn">Satın Al</button>
+                        </div>
+                        
+                        <div class="market-item">
+                            <div class="item-info">
+                                <div class="item-icon">🚜</div>
+                                <div class="item-details">
+                                    <div class="item-name" id="tractor-item">Traktör</div>
+                                    <div class="item-price">500 <span class="currency">Altın</span></div>
+                                </div>
+                            </div>
+                            <button class="buy-btn" id="buyTractorBtn">Satın Al</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="upgrades">
+                    <h3 class="section-title" id="upgrades-title">Yükseltmeler</h3>
+                    <div class="upgrade-items">
+                        <div class="upgrade-item">
+                            <div class="item-info">
+                                <div class="item-icon">🥛</div>
+                                <div class="item-details">
+                                    <div class="item-name" id="milk-upgrade">Süt Verimliliği</div>
+                                    <div class="item-price">150 <span class="currency">Altın</span></div>
+                                </div>
+                            </div>
+                            <button class="buy-btn" id="buyMilkUpgradeBtn">Satın Al</button>
+                        </div>
+                        
+                        <div class="upgrade-item">
+                            <div class="item-info">
+                                <div class="item-icon">🌾</div>
+                                <div class="item-details">
+                                    <div class="item-name" id="food-upgrade">Yem Verimliliği</div>
+                                    <div class="item-price">120 <span class="currency">Altın</span></div>
+                                </div>
+                            </div>
+                            <button class="buy-btn" id="buyFoodUpgradeBtn">Satın Al</button>
+                        </div>
+                        
+                        <div class="upgrade-item">
+                            <div class="item-info">
+                                <div class="item-icon">💖</div>
+                                <div class="item-details">
+                                    <div class="item-name" id="health-upgrade">İnek Sağlığı</div>
+                                    <div class="item-price">200 <span class="currency">Altın</span></div>
+                                </div>
+                            </div>
+                            <button class="buy-btn" id="buyHealthUpgradeBtn">Satın Al</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <h3 class="section-title" id="actions-title">Eylemler</h3>
+                    <div class="action-buttons">
+                        <button class="btn-primary" id="feedAllBtn">
+                            <i class="fas fa-bacon"></i> <span class="action-text">Hepsini Besle</span>
+                        </button>
+                        <button class="btn-primary" id="milkAllBtn">
+                            <i class="fas fa-hand-holding-water"></i> <span class="action-text">Hepsini Sağ</span>
+                        </button>
+                        <button class="btn-secondary" id="sellMilkBtn">
+                            <i class="fas fa-dollar-sign"></i> <span class="action-text">Süt Sat</span>
+                        </button>
+                        <button class="btn-secondary" id="resetGameBtn">
+                            <i class="fas fa-redo"></i> <span class="action-text">Yeniden Başlat</span>
+                        </button>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title" id="health-stat">Ort. Sağlık</div>
+                            <div class="stat-value" id="avgHealth">0%</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="healthBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title" id="productivity-stat">Verimlilik</div>
+                            <div class="stat-value" id="productivity">0%</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="productivityBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="time-controls">
+                        <button class="time-btn active" id="time1x">1x Hız</button>
+                        <button class="time-btn" id="time2x">2x Hız</button>
+                        <button class="time-btn" id="time3x">3x Hız</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="events-log" id="eventsLog">
+            <div class="event info" id="welcome-event">Çiftlik kuruldu. Hayırlı olsun!</div>
+        </div>
+    </div>
+    
+    <div class="message" id="welcomeMessage">
+        <div class="message-content">
+            <h2 id="welcome-title">Gelişmiş İnek Çiftliği Simülasyonu</h2>
+            <p id="welcome-text">İneklerinizi besleyin, sütlerini sağın ve çiftliğinizi büyütün. Zamanı yönetin, yükseltmeler satın alın ve en karlı çiftliği kurun!</p>
+            <button class="start-btn" id="startGameBtn">
+                <i class="fas fa-play"></i> <span id="start-button">Oyuna Başla</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Oyun durumu
+        const gameState = {
+            money: 1000,
+            milk: 0,
+            food: 100,
+            cows: 0,
+            maxCows: 10,
+            cowHealth: {},
+            cowProductivity: {},
+            milkEfficiency: 1,
+            foodEfficiency: 1,
+            healthLevel: 1,
+            hasTractor: false,
+            gameActive: false,
+            timeSpeed: 1,
+            day: 1,
+            events: [],
+            language: 'tr'
+        };
+        
+        // Çeviri sözlüğü
+        const translations = {
+            tr: {
+                title: "Gelişmiş İnek Çiftliği",
+                currency: "Altın",
+                unit: "Kg",
+                cowUnit: "İnek",
+                milkUnit: "Litre",
+                market: "Market",
+                upgrades: "Yükseltmeler",
+                actions: "Eylemler",
+                cowItem: "İnek",
+                foodItem: "Yem Paketi",
+                barnItem: "Ahır Yükseltme",
+                tractorItem: "Traktör",
+                milkUpgrade: "Süt Verimliliği",
+                foodUpgrade: "Yem Verimliliği",
+                healthUpgrade: "İnek Sağlığı",
+                feedAll: "Hepsini Besle",
+                milkAll: "Hepsini Sağ",
+                sellMilk: "Süt Sat",
+                resetGame: "Yeniden Başlat",
+                healthStat: "Ort. Sağlık",
+                productivityStat: "Verimlilik",
+                welcomeTitle: "Gelişmiş İnek Çiftliği Simülasyonu",
+                welcomeText: "İneklerinizi besleyin, sütlerini sağın ve çiftliğinizi büyütün. Zamanı yönetin, yükseltmeler satın alın ve en karlı çiftliği kurun!",
+                startButton: "Oyuna Başla",
+                buy: "Satın Al",
+                notEnoughMoney: "Yeterli paran yok!",
+                notEnoughFood: "Yeterli yem yok!",
+                noCows: "Hiç ineğin yok!",
+                noMilk: "Satacak sütün yok!",
+                cowBought: "Yeni bir inek satın alındı!",
+                foodBought: "Yem satın alındı!",
+                barnUpgraded: "Ahır yükseltildi! +5 kapasite",
+                tractorBought: "Traktör satın alındı! Verimlilik arttı",
+                upgradeBought: "Yükseltme satın alındı!",
+                cowsFed: "İnekler beslenildi!",
+                cowsMilked: "İnekler sağıldı!",
+                milkSold: "Süt satıldı!",
+                dayPassed: "Yeni gün başladı",
+                cowDied: "Bir inek öldü!",
+                cowSick: "Bir inek hastalandı!"
+            },
+            en: {
+                title: "Advanced Cow Farm",
+                currency: "Gold",
+                unit: "Kg",
+                cowUnit: "Cows",
+                milkUnit: "Liters",
+                market: "Market",
+                upgrades: "Upgrades",
+                actions: "Actions",
+                cowItem: "Cow",
+                foodItem: "Food Package",
+                barnItem: "Barn Upgrade",
+                tractorItem: "Tractor",
+                milkUpgrade: "Milk Efficiency",
+                foodUpgrade: "Food Efficiency",
+                healthUpgrade: "Cow Health",
+                feedAll: "Feed All",
+                milkAll: "Milk All",
+                sellMilk: "Sell Milk",
+                resetGame: "Restart Game",
+                healthStat: "Avg. Health",
+                productivityStat: "Productivity",
+                welcomeTitle: "Advanced Cow Farm Simulation",
+                welcomeText: "Feed your cows, milk them and grow your farm. Manage time, buy upgrades and build the most profitable farm!",
+                startButton: "Start Game",
+                buy: "Buy",
+                notEnoughMoney: "Not enough money!",
+                notEnoughFood: "Not enough food!",
+                noCows: "You don't have any cows!",
+                noMilk: "You don't have any milk to sell!",
+                cowBought: "New cow purchased!",
+                foodBought: "Food purchased!",
+                barnUpgraded: "Barn upgraded! +5 capacity",
+                tractorBought: "Tractor purchased! Efficiency increased",
+                upgradeBought: "Upgrade purchased!",
+                cowsFed: "Cows fed!",
+                cowsMilked: "Cows milked!",
+                milkSold: "Milk sold!",
+                dayPassed: "New day started",
+                cowDied: "A cow died!",
+                cowSick: "A cow got sick!"
+            }
+        };
+        
+        // Oyunu başlat
+        function startGame() {
+            gameState.gameActive = true;
+            document.getElementById('welcomeMessage').style.display = 'none';
+            createFarmGrid();
+            updateUI();
+            
+            // Oyun döngüsünü başlat
+            setInterval(gameLoop, 1000);
+            
+            // Rastgele olaylar için zamanlayıcı
+            setInterval(randomEvent, 10000);
+        }
+        
+        // Çiftlik ızgarasını oluştur
+        function createFarmGrid() {
+            const farmArea = document.getElementById('farmArea');
+            farmArea.innerHTML = '';
+            
+            for (let i = 0; i < 20; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'farm-cell';
+                cell.dataset.index = i;
+                
+                // Hücreye tıklama olayı ekle
+                cell.addEventListener('click', () => {
+                    if (gameState.cows < gameState.maxCows) {
+                        addCowToCell(i);
+                    } else {
+                        addEvent(translations[gameState.language].notEnoughMoney, 'warning');
+                    }
+                });
+                
+                farmArea.appendChild(cell);
+            }
+        }
+        
+        // Hücreye inek ekle
+        function addCowToCell(index) {
+            const cell = document.querySelector(`.farm-cell[data-index="${index}"]`);
+            
+            if (!cell.classList.contains('has-cow') && gameState.money >= 100) {
+                cell.classList.add('has-cow');
+                
+                // İnek sağlık ve verimlilik değerlerini ayarla
+                gameState.cowHealth[index] = 100;
+                gameState.cowProductivity[index] = 1;
+                
+                gameState.cows++;
+                gameState.money -= 100;
+                
+                // İnek bilgilerini göster
+                const cowInfo = document.createElement('div');
+                cowInfo.className = 'cow-info';
+                
+                const healthStat = document.createElement('div');
+                healthStat.className = 'cow-stat';
+                healthStat.innerHTML = '💖<span>100%</span>';
+                
+                const hungerStat = document.createElement('div');
+                hungerStat.className = 'cow-stat';
+                hungerStat.innerHTML = '🌾<span>100%</span>';
+                
+                cowInfo.appendChild(healthStat);
+                cowInfo.appendChild(hungerStat);
+                cell.appendChild(cowInfo);
+                
+                updateUI();
+                addEvent(translations[gameState.language].cowBought, 'success');
+            } else if (gameState.money < 100) {
+                addEvent(translations[gameState.language].notEnoughMoney, 'warning');
+            }
+        }
+        
+        // Tüm inekleri besle
+        function feedAllCows() {
+            if (gameState.food >= gameState.cows * 5) {
+                for (let i = 0; i < 20; i++) {
+                    if (gameState.cowHealth[i] !== undefined) {
+                        gameState.cowHealth[i] = Math.min(100, gameState.cowHealth[i] + 20);
+                        updateCowInfo(i);
+                    }
+                }
+                
+                gameState.food -= gameState.cows * 5;
+                updateUI();
+                addEvent(translations[gameState.language].cowsFed, 'success');
+            } else {
+                addEvent(translations[gameState.language].notEnoughFood, 'warning');
+            }
+        }
+        
+        // Tüm inekleri sağ
+        function milkAllCows() {
+            if (gameState.cows > 0) {
+                let totalMilk = 0;
+                
+                for (let i = 0; i < 20; i++) {
+                    if (gameState.cowHealth[i] !== undefined) {
+                        const milkProduced = Math.floor(gameState.cowProductivity[i] * gameState.cowHealth[i] / 20 * gameState.milkEfficiency);
+                        totalMilk += milkProduced;
+                        
+                        // Sağma sonrası sağlık azalması
+                        gameState.cowHealth[i] = Math.max(0, gameState.cowHealth[i] - 10);
+                        updateCowInfo(i);
+                    }
+                }
+                
+                if (totalMilk > 0) {
+                    gameState.milk += totalMilk;
+                    updateUI();
+                    addEvent(`${totalMilk} ${translations[gameState.language].milkUnit} ${translations[gameState.language].cowsMilked.toLowerCase()}`, 'success');
+                }
+            } else {
+                addEvent(translations[gameState.language].noCows, 'warning');
+            }
+        }
+        
+        // Süt sat
+        function sellMilk() {
+            if (gameState.milk > 0) {
+                const basePrice = 5;
+                const priceMultiplier = gameState.hasTractor ? 1.5 : 1;
+                const earnings = Math.floor(gameState.milk * basePrice * priceMultiplier);
+                
+                gameState.money += earnings;
+                
+                addEvent(`${gameState.milk} ${translations[gameState.language].milkUnit} ${translations[gameState.language].milkSold.toLowerCase()} ${earnings} ${translations[gameState.language].currency}`, 'success');
+                
+                gameState.milk = 0;
+                updateUI();
+            } else {
+                addEvent(translations[gameState.language].noMilk, 'warning');
+            }
+        }
+        
+        // Yem satın al
+        function buyFood() {
+            if (gameState.money >= 30) {
+                gameState.money -= 30;
+                gameState.food += 50;
+                updateUI();
+                addEvent(translations[gameState.language].foodBought, 'success');
+            } else {
+                addEvent(translations[gameState.language].notEnoughMoney, 'warning');
+            }
+        }
+        
+        // Ahır yükseltme satın al
+        function buyBarn() {
+            if (gameState.money >= 200) {
+                gameState.money -= 200;
+                gameState.maxCows += 5;
+                updateUI();
+                addEvent(translations[gameState.language].barnUpgraded, 'success');
+            } else {
+                addEvent(translations[gameState.language].notEnoughMoney, 'warning');
+            }
+        }
+        
+        // Traktör satın al
+        function buyTractor() {
+            if (gameState.money >= 500) {
+                gameState.money -= 500;
+                gameState.hasTractor = true;
+                gameState.milkEfficiency *= 1.2;
+                gameState.foodEfficiency *= 1.2;
+                updateUI();
+                addEvent(translations[gameState.language].tractorBought, 'success');
+            } else {
+                addEvent(translations[gameState.language].notEnoughMoney, 'warning');
+            }
+        }
+        
+        // Süt verimliliği yükseltme satın al
+        function buyMilkUpgrade() {
+            if (gameState.money >= 150) {
+                gameState.money -= 150;
+                gameState.milkEfficiency += 0.2;
+                updateUI();
+                addEvent(translations[gameState.language].upgradeBought, 'success');
+            } else {
+                addEvent(translations[gameState.language].notEnoughMoney, 'warning');
+            }
+        }
+        
+        // Yem verimliliği yükseltme satın al
+        function buyFoodUpgrade() {
+            if (gameState.money >= 120) {
+                gameState.money -= 120;
+                gameState.foodEfficiency += 0.25;
+                updateUI();
+                addEvent(translations[gameState.language].upgradeBought, 'success');
+            } else {
+                addEvent(translations[gameState.language].notEnoughMoney, 'warning');
+            }
+        }
+        
+        // Sağlık yükseltme satın al
+        function buyHealthUpgrade() {
+            if (gameState.money >= 200) {
+                gameState.money -= 200;
+                gameState.healthLevel += 0.3;
+                
+                // Mevcut ineklerin sağlığını artır
+                for (let i = 0; i < 20; i++) {
+                    if (gameState.cowHealth[i] !== undefined) {
+                        gameState.cowHealth[i] = Math.min(100, gameState.cowHealth[i] + 20);
+                        updateCowInfo(i);
+                    }
+                }
+                
+                updateUI();
+                addEvent(translations[gameState.language].upgradeBought, 'success');
+            } else {
+                addEvent(translations[gameState.language].notEnoughMoney, 'warning');
+            }
+        }
+        
+        // İnek bilgilerini güncelle
+        function updateCowInfo(index) {
+            const cell = document.querySelector(`.farm-cell[data-index="${index}"]`);
+            const cowInfo = cell.querySelector('.cow-info');
+            
+            if (cowInfo) {
+                const healthStat = cowInfo.querySelector('.cow-stat:nth-child(1) span');
+                const hungerStat = cowInfo.querySelector('.cow-stat:nth-child(2) span');
+                
+                healthStat.textContent = `${gameState.cowHealth[index]}%`;
+                
+                // Sağlık durumuna göre renk değiştir
+                if (gameState.cowHealth[index] > 70) {
+                    healthStat.style.color = '#27ae60';
+                } else if (gameState.cowHealth[index] > 30) {
+                    healthStat.style.color = '#f39c12';
+                } else {
+                    healthStat.style.color = '#e74c3c';
+                }
+            }
+        }
+        
+        // UI'ı güncelle
+        function updateUI() {
+            document.getElementById('money').textContent = gameState.money;
+            document.getElementById('milk').textContent = gameState.milk;
+            document.getElementById('food').textContent = gameState.food;
+            document.getElementById('cows').textContent = gameState.cows;
+            document.getElementById('maxCows').textContent = gameState.maxCows;
+            
+            // Buton durumlarını güncelle
+            document.getElementById('feedAllBtn').disabled = gameState.food < gameState.cows * 5 || gameState.cows === 0;
+            document.getElementById('milkAllBtn').disabled = gameState.cows === 0;
+            document.getElementById('sellMilkBtn').disabled = gameState.milk === 0;
+            document.getElementById('buyCowBtn').disabled = gameState.money < 100 || gameState.cows >= gameState.maxCows;
+            document.getElementById('buyFoodBtn').disabled = gameState.money < 30;
+            document.getElementById('buyBarnBtn').disabled = gameState.money < 200;
+            document.getElementById('buyTractorBtn').disabled = gameState.money < 500 || gameState.hasTractor;
+            document.getElementById('buyMilkUpgradeBtn').disabled = gameState.money < 150;
+            document.getElementById('buyFoodUpgradeBtn').disabled = gameState.money < 120;
+            document.getElementById('buyHealthUpgradeBtn').disabled = gameState.money < 200;
+            
+            // Ortalama sağlık ve verimliliği hesapla
+            let totalHealth = 0;
+            let totalProductivity = 0;
+            let cowCount = 0;
+            
+            for (let i = 0; i < 20; i++) {
+                if (gameState.cowHealth[i] !== undefined) {
+                    totalHealth += gameState.cowHealth[i];
+                    totalProductivity += gameState.cowProductivity[i];
+                    cowCount++;
+                }
+            }
+            
+            const avgHealth = cowCount > 0 ? Math.round(totalHealth / cowCount) : 0;
+            const avgProductivity = cowCount > 0 ? Math.round(totalProductivity / cowCount * 100) : 0;
+            
+            document.getElementById('avgHealth').textContent = `${avgHealth}%`;
+            document.getElementById('productivity').textContent = `${avgProductivity}%`;
+            
+            document.getElementById('healthBar').style.width = `${avgHealth}%`;
+            document.getElementById('productivityBar').style.width = `${avgProductivity}%`;
+        }
+        
+        // Olay ekle
+        function addEvent(text, type) {
+            const eventElement = document.createElement('div');
+            eventElement.className = `event ${type}`;
+            eventElement.textContent = text;
+            
+            const eventsLog = document.getElementById('eventsLog');
+            eventsLog.prepend(eventElement);
+            
+            // Eski olayları temizle
+            if (eventsLog.children.length > 8) {
+                eventsLog.removeChild(eventsLog.lastChild);
+            }
+            
+            gameState.events.push({ text, type, time: new Date() });
+        }
+        
+        // Rastgele olay
+        function randomEvent() {
+            if (!gameState.gameActive || gameState.cows === 0) return;
+            
+            const events = [
+                {
+                    probability: 0.1,
+                    message: translations[gameState.language].cowSick,
+                    effect: () => {
+                        for (let i = 0; i < 20; i++) {
+                            if (gameState.cowHealth[i] !== undefined && Math.random() < 0.3) {
+                                gameState.cowHealth[i] = Math.max(0, gameState.cowHealth[i] - 30);
+                                updateCowInfo(i);
+                            }
+                        }
+                    }
+                },
+                {
+                    probability: 0.05,
+                    message: translations[gameState.language].cowDied,
+                    effect: () => {
+                        for (let i = 0; i < 20; i++) {
+                            if (gameState.cowHealth[i] !== undefined && Math.random() < 0.1) {
+                                const cell = document.querySelector(`.farm-cell[data-index="${i}"]`);
+                                cell.classList.remove('has-cow');
+                                cell.innerHTML = '';
+                                
+                                delete gameState.cowHealth[i];
+                                delete gameState.cowProductivity[i];
+                                
+                                gameState.cows--;
+                                break;
+                            }
+                        }
+                    }
+                },
+                {
+                    probability: 0.15,
+                    message: translations[gameState.language].dayPassed,
+                    effect: () => {
+                        gameState.day++;
+                    }
+                }
+            ];
+            
+            for (const event of events) {
+                if (Math.random() < event.probability) {
+                    addEvent(event.message, 'info');
+                    event.effect();
+                    updateUI();
+                    break;
+                }
+            }
+        }
+        
+        // Oyun döngüsü
+        function gameLoop() {
+            if (!gameState.gameActive) return;
+            
+            // İneklerin sağlığını azalt
+            for (let i = 0; i < 20; i++) {
+                if (gameState.cowHealth[i] !== undefined) {
+                    gameState.cowHealth[i] = Math.max(0, gameState.cowHealth[i] - (2 * gameState.timeSpeed));
+                    updateCowInfo(i);
+                    
+                    // Sağlık çok düşükse verimliliği azalt
+                    if (gameState.cowHealth[i] < 30) {
+                        gameState.cowProductivity[i] = 0.5;
+                    } else if (gameState.cowHealth[i] < 60) {
+                        gameState.cowProductivity[i] = 0.8;
+                    } else {
+                        gameState.cowProductivity[i] = 1;
+                    }
+                    
+                    // İnek ölümü
+                    if (gameState.cowHealth[i] <= 0) {
+                        const cell = document.querySelector(`.farm-cell[data-index="${i}"]`);
+                        cell.classList.remove('has-cow');
+                        cell.innerHTML = '';
+                        
+                        delete gameState.cowHealth[i];
+                        delete gameState.cowProductivity[i];
+                        
+                        gameState.cows--;
+                        addEvent(translations[gameState.language].cowDied, 'danger');
+                    }
+                }
+            }
+            
+            updateUI();
+        }
+        
+        // Dili değiştir
+        function changeLanguage(lang) {
+            gameState.language = lang;
+            
+            // Aktif dil butonunu güncelle
+            document.getElementById('lang-tr').classList.toggle('active', lang === 'tr');
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            
+            // Tüm metinleri güncelle
+            document.getElementById('game-title').textContent = translations[lang].title;
+            document.querySelectorAll('.currency').forEach(el => el.textContent = translations[lang].currency);
+            document.querySelectorAll('.unit').forEach((el, index) => {
+                if (index === 3) el.textContent = translations[lang].cowUnit;
+                else el.textContent = translations[lang].unit;
+            });
+            document.getElementById('market-title').textContent = translations[lang].market;
+            document.getElementById('upgrades-title').textContent = translations[lang].upgrades;
+            document.getElementById('actions-title').textContent = translations[lang].actions;
+            document.getElementById('cow-item').textContent = translations[lang].cowItem;
+            document.getElementById('food-item').textContent = translations[lang].foodItem;
+            document.getElementById('barn-item').textContent = translations[lang].barnItem;
+            document.getElementById('tractor-item').textContent = translations[lang].tractorItem;
+            document.getElementById('milk-upgrade').textContent = translations[lang].milkUpgrade;
+            document.getElementById('food-upgrade').textContent = translations[lang].foodUpgrade;
+            document.getElementById('health-upgrade').textContent = translations[lang].healthUpgrade;
+            document.querySelectorAll('.action-text').forEach((el, index) => {
+                const texts = [
+                    translations[lang].feedAll, 
+                    translations[lang].milkAll, 
+                    translations[lang].sellMilk, 
+                    translations[lang].resetGame
+                ];
+                el.textContent = texts[index];
+            });
+            document.getElementById('health-stat').textContent = translations[lang].healthStat;
+            document.getElementById('productivity-stat').textContent = translations[lang].productivityStat;
+            document.getElementById('welcome-title').textContent = translations[lang].welcomeTitle;
+            document.getElementById('welcome-text').textContent = translations[lang].welcomeText;
+            document.getElementById('start-button').textContent = translations[lang].startButton;
+            document.querySelectorAll('.buy-btn').forEach(el => el.textContent = translations[lang].buy);
+            
+            // Hoş geldiniz mesajını güncelle
+            document.getElementById('welcome-event').textContent = lang === 'tr' ? 'Çiftlik kuruldu. Hayırlı olsun!' : 'Farm established. Good luck!';
+        }
+        
+        // Zaman hızını değiştir
+        function changeTimeSpeed(speed) {
+            gameState.timeSpeed = speed;
+            
+            // Aktif zaman butonunu güncelle
+            document.getElementById('time1x').classList.toggle('active', speed === 1);
+            document.getElementById('time2x').classList.toggle('active', speed === 2);
+            document.getElementById('time3x').classList.toggle('active', speed === 3);
+        }
+        
+        // Event listener'ları kur
+        function setupEventListeners() {
+            document.getElementById('startGameBtn').addEventListener('click', startGame);
+            document.getElementById('feedAllBtn').addEventListener('click', feedAllCows);
+            document.getElementById('milkAllBtn').addEventListener('click', milkAllCows);
+            document.getElementById('sellMilkBtn').addEventListener('click', sellMilk);
+            document.getElementById('resetGameBtn').addEventListener('click', () => {
+                window.location.reload();
+            });
+            document.getElementById('buyCowBtn').addEventListener('click', () => {
+                if (gameState.money >= 100 && gameState.cows < gameState.maxCows) {
+                    for (let i = 0; i < 20; i++) {
+                        const cell = document.querySelector(`.farm-cell[data-index="${i}"]`);
+                        if (!cell.classList.contains('has-cow')) {
+                            addCowToCell(i);
+                            return;
+                        }
+                    }
+                }
+            });
+            document.getElementById('buyFoodBtn').addEventListener('click', buyFood);
+            document.getElementById('buyBarnBtn').addEventListener('click', buyBarn);
+            document.getElementById('buyTractorBtn').addEventListener('click', buyTractor);
+            document.getElementById('buyMilkUpgradeBtn').addEventListener('click', buyMilkUpgrade);
+            document.getElementById('buyFoodUpgradeBtn').addEventListener('click', buyFoodUpgrade);
+            document.getElementById('buyHealthUpgradeBtn').addEventListener('click', buyHealthUpgrade);
+            document.getElementById('lang-tr').addEventListener('click', () => changeLanguage('tr'));
+            document.getElementById('lang-en').addEventListener('click', () => changeLanguage('en'));
+            document.getElementById('time1x').addEventListener('click', () => changeTimeSpeed(1));
+            document.getElementById('time2x').addEventListener('click', () => changeTimeSpeed(2));
+            document.getElementById('time3x').addEventListener('click', () => changeTimeSpeed(3));
+        }
+        
+        // Oyunu hazırla
+        window.onload = function() {
+            createFarmGrid();
+            setupEventListeners();
+            document.getElementById('welcomeMessage').style.display = 'flex';
+        };
+    </script>
+</body>
+</html>
